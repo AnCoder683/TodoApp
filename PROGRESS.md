@@ -53,6 +53,7 @@ browser                                browser
 | 11 | Một `.env` duy nhất ở gốc; `api` nạp `../.env` qua dotenv (`prisma.config.ts`, `src/index.js`) | Compose và api dùng chung. Chặng 1 trong container không có file, biến do compose bơm vào |
 | 9 | ~~Subagent `helper`~~ (không tồn tại) → khi người học yêu cầu, giao việc app cho **Agent model haiku** (rẻ). **Không** đụng phần Docker | Phần app không phải trọng tâm, giao bớt. Phần Docker người học tự gõ để học |
 | 13 | `prisma.config.ts` đọc `process.env.DATABASE_URL` thay vì `env("DATABASE_URL")` | `env()` báo lỗi ngay khi nạp config nếu thiếu biến → `prisma generate` lúc `docker build` bị chặn dù không cần DB. Nguyên tắc: **image build được mà không cần biết nó chạy ở đâu**; biến kết nối chỉ cần lúc chạy |
+| 14 | `.gitattributes`: `* text=auto eol=lf` | Git for Windows mặc định `autocrlf=true` → checkout ra CRLF. File COPY vào image Linux mà có CRLF thì script shell/shebang hỏng (`/bin/sh^M`). Ép LF để image build giống nhau dù clone trên Windows hay Linux (CI chặng 4) |
 | 12 | `web` dùng **axios 1.20.0 ghim chính xác** (`--save-exact`), `axios.create({ baseURL: '/api' })` | Ghim version + lockfile để chặng 2 `npm ci` build image tái lập được |
 
 ## App (tối giản)
@@ -68,7 +69,7 @@ browser                                browser
 
 **Chặng 1, xong bước 5 (2026-10-14):** cả 3 service (`db`, `api`, `web`) chạy bằng `docker compose up -d --build`, mở `http://localhost:5173` dùng được, hot reload cả hai phía. Bước 6–7 + sửa healthcheck cũng xong → **XONG CHẶNG 1** (2026-10-14). Các thí nghiệm tuỳ chọn còn lại (`start_interval`, cổng 5433, hash volume ẩn danh) bỏ qua.
 
-**Bước tiếp theo: Chặng 2** (Dockerfile prod). Dự kiến: (1) `api/Dockerfile` multi-stage: stage cài deps + `prisma generate`, stage chạy chỉ có prod deps, `ENV NODE_ENV=production`, `USER node`, `CMD node`; COPY `prisma/migrations`. (2) `web/Dockerfile`: stage Node `npm run build` → stage `nginx` phục vụ `dist` + proxy `/api` (quyết định #3). (3) So sánh kích thước image dev vs prod (`docker images`), kiểm tra `whoami` trong container. Lưu ý: project chưa phải git repo (migration "phải commit" chưa thực hiện được) → nên `git init` trước chặng 4.
+**Bước tiếp theo: Chặng 2** (Dockerfile prod). Dự kiến: (1) `api/Dockerfile` multi-stage: stage cài deps + `prisma generate`, stage chạy chỉ có prod deps, `ENV NODE_ENV=production`, `USER node`, `CMD node`; COPY `prisma/migrations`. (2) `web/Dockerfile`: stage Node `npm run build` → stage `nginx` phục vụ `dist` + proxy `/api` (quyết định #3). (3) So sánh kích thước image dev vs prod (`docker images`), kiểm tra `whoami` trong container.
 
 ## Bước tiếp theo: Chặng 1 (compose dev, người học tự gõ, Claude cầm tay chỉ việc)
 1. ~~Build + kiểm tra Dockerfile.dev~~ ✔ (context 2.94kB, engine `linux-musl-openssl-3.0.x`, sửa code chỉ `COPY . .` chạy lại)
@@ -110,3 +111,4 @@ browser                                browser
 - **2026-10-14 (chặng 1, bước 7)**: Đổi cổng db sang `127.0.0.1:5432:5432`. Học: cú pháp `IP:cổng_máy:cổng_container`, bỏ IP = `0.0.0.0` (mọi card mạng); cổng publish là cho bên ngoài vào, container nói chuyện với nhau không cần nó. Sửa `ports` → `up -d` tạo lại container db, dữ liệu còn nhờ volume. IP Wi-Fi giờ là `192.168.1.10` (trước `.11`, DHCP đổi).
 - **2026-10-14 (chặng 1, healthcheck)**: Sửa healthcheck sang `pg_isready -h 127.0.0.1` (kiểm tra đúng đường TCP mà api dùng). Thí nghiệm container tạm `pgtest` so sánh socket/TCP lúc initdb. Lần đầu sửa file nhưng container db vẫn cũ (health log còn `/var/run/postgresql`) → healthcheck gắn vào container lúc tạo, phải `up -d` để tạo lại. Compose v5 chỉ in `Healthy`, không in `Recreated`.
 - **2026-10-14 (đóng chặng 1)**: Người học bỏ qua thí nghiệm `--host` (đã hiểu). Đánh dấu xong chặng 1, chuẩn bị chặng 2.
+- **2026-10-14 (git)**: `git init -b main`, thêm `.gitattributes` (quyết định #14), commit đầu `95dffe0` (không có `.env`, `node_modules`), push lên `origin` (repo GitHub trống).
