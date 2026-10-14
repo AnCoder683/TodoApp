@@ -1,0 +1,19 @@
+body {
+  font-family: system-ui, sans-serif;
+  max-width: 480px;
+  margin: 40px auto;
+  padding: 0 16px;
+}
+li {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 4px 0;
+}
+li span {
+  flex: 1;
+}
+.done {
+  text-decoration: line-through;
+  color: #888;
+}

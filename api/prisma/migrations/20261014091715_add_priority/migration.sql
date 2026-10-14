@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "todos" ADD COLUMN     "priority" INTEGER NOT NULL DEFAULT 0;

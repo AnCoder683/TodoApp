@@ -1,0 +1,3 @@
+# Luôn checkout với LF, kể cả trên Windows (core.autocrlf=true).
+# File được COPY vào image Linux: CRLF làm hỏng script shell (/bin/sh^M) và shebang.
+* text=auto eol=lf
