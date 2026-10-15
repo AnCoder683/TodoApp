@@ -92,6 +92,11 @@ browser                                browser
 - [x] `docker compose exec db psql ...` → vào DB không cần cài psql trên máy (kết nối nội bộ = trust, không hỏi mật khẩu)
 - [x] Xem volume nằm đâu: `docker volume inspect` → Mountpoint là đường dẫn Linux trong VM WSL2, không phải ổ Windows. Xem nội dung bằng cách gắn volume vào container tạm: `docker run --rm -v todoapp_db-data:/xem alpine ls /xem`; `PG_VERSION` = 17 (lý do quyết định #4)
 
+## Ôn lại đầu buổi sau (người học sẽ hỏi lại)
+1. **Vì sao thêm thư viện phải `up -d --build -V`?** Volume ẩn danh `/app/node_modules` chỉ copy từ image **một lần** (lúc trống). Build image mới có lib mới, nhưng compose gắn lại volume cũ → che bản mới → `Cannot find module`. `-V` (`--renew-anon-volumes`) tạo volume trống mới → copy lại từ image mới.
+2. **Vì sao `migrate dev` xong phải `restart api`?** `generate` ghi client mới thẳng vào volume `node_modules` (đĩa đã đúng, không cần `-V`), nhưng process Node đã nạp client cũ vào **bộ nhớ**; nodemon bỏ qua `node_modules`, không theo dõi `.prisma`/`.sql` nên không tự restart.
+- Ý chung: `-V` sửa **đĩa cũ** (volume che image), `restart` sửa **bộ nhớ cũ** (đĩa đã mới).
+
 ## Câu hỏi còn mở
 - ~~Docker Desktop đang dùng backend WSL2 phải không?~~ → **Đúng**, WSL2 (kernel `6.18.33.2-microsoft-standard-WSL2`). Cổng 5432 trên máy đang trống, dùng 5432 được.
 
